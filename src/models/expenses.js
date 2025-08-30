@@ -17,7 +17,7 @@ const expenses = [
     },
     amountUSDCents: 1875,
     category: getCategoryByName("Food"),
-    note: "",
+    note: "bought water 1l and milk 1l",
     coordinates: {
       longitude: 51.091474,
       latitude: 71.396904,
