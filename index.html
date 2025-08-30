@@ -1,13 +1,111 @@
 <!doctype html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
+    <meta charset="utf-8" />
+    <title>Google Maps Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      #map {
+        height: 100vh;
+        width: 100%;
+      }
+      .toast {
+        position: fixed;
+        left: 50%;
+        top: 16px;
+        transform: translateX(-50%);
+        background: #222;
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font: 14px system-ui;
+      }
+    </style>
+    <script>
+      let map, marker;
+
+      async function initMap() {
+        // Импортируем библиотеки через новый loader
+        const { Map } = await google.maps.importLibrary("maps");
+        const { AdvancedMarkerElement } =
+          await google.maps.importLibrary("marker");
+
+        // Запасной центр (Гарвард)
+        const fallback = { lat: 42.3736, lng: -71.1097 };
+
+        map = new Map(document.getElementById("map"), {
+          center: fallback,
+          zoom: 15,
+          // лёгкий 3D: наклон и поворот работают в векторной карте
+          tilt: 67.5,
+          heading: 320,
+          mapId: "DEMO_MAP_ID", // опционально, если у тебя есть Map ID
+        });
+
+        // Функция для краткого уведомления
+        const toast = (msg) => {
+          const el = document.createElement("div");
+          el.className = "toast";
+          el.textContent = msg;
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), 3000);
+        };
+
+        // Проверяем доступность Geolocation API
+        if (!("geolocation" in navigator)) {
+          toast(
+            "Геолокация не поддерживается браузером. Показан запасной центр."
+          );
+          addMarker(fallback);
+          return;
+        }
+
+        // (Необязательно) проверим статус разрешения
+        try {
+          if (navigator.permissions) {
+            const st = await navigator.permissions.query({
+              name: "geolocation",
+            });
+            if (st.state === "denied") {
+              toast("Доступ к геолокации запрещён. Показан запасной центр.");
+              addMarker(fallback);
+              return;
+            }
+          }
+        } catch (_) {}
+
+        // Получаем текущие координаты
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const you = {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+            };
+            map.setCenter(you);
+            addMarker(you, "Вы здесь");
+          },
+          (err) => {
+            console.warn("Geolocation error:", err);
+            toast("Не удалось получить геолокацию. Показан запасной центр.");
+            addMarker(fallback);
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+        );
+
+        function addMarker(position, title = "Точка") {
+          if (marker) marker.map = null;
+          marker = new AdvancedMarkerElement({ map, position, title });
+        }
+      }
+    </script>
+
+    <!-- РЕКОМЕНДУЕМЫЙ способ загрузки: loading=async + importLibrary -->
+    <script
+      async
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBGQim5BydH2yCx1C8b3Y7e6XCGI5zqVrA&v=weekly&loading=async&callback=initMap&libraries=maps,marker"
+    ></script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <div id="map"></div>
   </body>
 </html>
