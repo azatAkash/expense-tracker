@@ -13,7 +13,7 @@ const ExpenseOverviewHeader = () => {
         </div>
       </div>
       <div className="right-child">
-        <div className="close-logo-container" onClick={closeExpenseSidebar()}>
+        <div className="close-logo-container">
           <img src="../../imgs/close.png" alt="" className="close-logo" />
         </div>
       </div>
@@ -22,7 +22,3 @@ const ExpenseOverviewHeader = () => {
 };
 
 export default ExpenseOverviewHeader;
-
-function closeExpenseSidebar() {
-  document.querySelector;
-}

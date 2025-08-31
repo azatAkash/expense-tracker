@@ -1,5 +1,5 @@
 import { generateId } from "../utils/generate";
-import { getCategoryByName } from "./categories";
+import { isValidDate } from "../utils/validation";
 
 export const expenses = [
   {
@@ -70,6 +70,10 @@ export const expenses = [
 ];
 
 export function getExpencesByDate(date) {
+  if (!isValidDate(date)) {
+    throw new Error(`Invalid date key: ${date}`);
+  }
+
   return expenses
     .filter((exp) => exp.date === date)
     .sort((a, b) => Number(a.time) - Number(b.time));

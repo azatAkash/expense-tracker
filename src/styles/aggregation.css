@@ -1,0 +1,39 @@
+.expense-aggregation-container {
+  width: 100%;
+  padding: 0 25px;
+}
+
+.expense-aggregation-card {
+  background: linear-gradient(
+    to left,
+    rgba(255, 192, 203, 0.114),
+    rgba(69, 227, 255, 0.156),
+    rgba(67, 255, 158, 0.151)
+  );
+  border: 1px solid rgba(69, 227, 255, 0.34);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.expense-aggregation-card .right-container {
+  text-align: right;
+}
+.transaction-count-p,
+.daily-total-p {
+  color: rgba(0, 0, 0, 0.514);
+}
+
+.transaction-count,
+.daily-total-sum {
+  font-size: 1.5rem;
+  margin-top: 10px;
+  font-weight: 700;
+}
+
+.expense-aggregation-badge-container {
+  position: fixed;
+  right: 0;
+}

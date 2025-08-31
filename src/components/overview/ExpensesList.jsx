@@ -1,18 +1,16 @@
 // src/components/ExpensesList.jsx
-import { getExpencesByDate } from "../models/expenses";
-import { formatCurrencyCents, formatTime } from "../utils/format";
-import { getCategoryByName } from "../models/categories";
+import { formatCurrencyCents, formatTime } from "../../utils/format";
+import { getCategoryByName } from "../../models/categories";
 import AddressText from "./AddressText";
-import { hexToRgba } from "../utils/format";
-import GoogleMapsManager from "../utils/GoogleMapsManager";
-import React, { useEffect, useMemo } from "react";
+import { hexToRgba } from "../../utils/format";
 
-const ExpensesList = ({ date }) => {
-  const items = getExpencesByDate(date); // compute directly
+const ExpensesList = ({ items }) => {
+  // compute directly
 
   return (
     <div className="expenses-list-container">
       <span className="line"></span>
+
       <div className="expenses-list">
         {items.map((expense) => {
           const category = getCategoryByName(expense.category);

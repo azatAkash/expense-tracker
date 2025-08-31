@@ -37,7 +37,7 @@
 }
 
 .expense:hover {
-  box-shadow: 0 1px 2px var(--border-color);
+  box-shadow: 2px 2px 2px var(--border-color);
 }
 
 .expense.selected {
@@ -99,9 +99,10 @@
   gap: 10px;
   overflow-y: scroll;
 }
+
 .expense-place-container {
   display: flex;
-  flex-wrap: wrap;
+
   max-height: 2.3rem;
   gap: 5px;
 }
