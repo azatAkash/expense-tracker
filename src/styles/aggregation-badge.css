@@ -1,14 +1,60 @@
 .expense-aggregation-badge-container {
   position: fixed;
   right: 0;
+  top: 0;
   background-color: white;
   margin: 20px;
   border-radius: 10px;
   z-index: 100;
-  padding: 25px 20px;
+  padding: 20px;
   transition: all 0.25;
 }
 
+.expense-aggregation-badge {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+}
+
+.expense-aggregation-badge .bottom-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.expense-aggregation-badge .bottom-container .left-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+}
+
+.expense-aggregation-badge .bottom-container .right-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+}
+
 .expense-aggregation-badge-container img {
-  height: 20px;
+  height: 1.3rem;
+  width: 1.3rem;
+  margin-top: 10px;
+}
+
+.daily-total-sum {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.transaction-count {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgb(76, 76, 76);
+  word-spacing: 0;
 }

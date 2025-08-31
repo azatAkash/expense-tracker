@@ -20,7 +20,7 @@ export const expenses = [
     date: "20250827",
     time: "1200",
     timezone: "5",
-    amountUSDCents: 1875,
+    amountUSDCents: 134235,
     category: "Transportation",
     note: "bought water 1l and milk 1l",
     coordinates: {
@@ -33,7 +33,7 @@ export const expenses = [
     date: "20250827",
     time: "0001",
     timezone: "5",
-    amountUSDCents: 1875,
+    amountUSDCents: 11875,
     category: "Other",
     note: "bought water 1l and milk 1l",
     coordinates: {

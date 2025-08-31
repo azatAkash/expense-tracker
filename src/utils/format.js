@@ -25,6 +25,33 @@ export function formatToYYYYMMDD(date = new Date()) {
   return `${year}${month}${day}`;
 }
 
+// utils/format.js
+export function getFormattedDate(
+  date = new Date(),
+  {
+    weekLen = "short", // "short" | "long" | "narrow"
+    monthLen = "short", // "numeric" | "2-digit" | "long" | "short" | "narrow"
+    day = "numeric", // "numeric" | "2-digit"
+    year = false, // include year?
+  } = {}
+) {
+  const dateStr = date.toLocaleDateString("en-US", {
+    month: monthLen,
+    day,
+    ...(year ? { year: "numeric" } : {}),
+  });
+
+  const weekStr = date.toLocaleDateString("en-US", {
+    weekday: weekLen,
+  });
+
+  return {
+    dateStr, // e.g. "Aug 27" or "August 27, 2025" if year:true
+    weekStr, // e.g. "Wed" / "Wednesday"
+    yearStr: year ? String(date.getFullYear()) : "",
+  };
+}
+
 export function cleanAddress(address) {
   if (!address) return "";
   // removes 4–6 digit postal codes

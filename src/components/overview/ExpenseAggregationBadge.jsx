@@ -1,13 +1,22 @@
 // src/components/ExpenseAggregationOverview.jsx
 import React from "react";
 import { formatCurrencyCents } from "../../utils/format";
+import { getFormattedDate } from "../../utils/format";
+const ExpenseAggregationBadge = ({ totalSum, transactions, date }) => {
+  const formattedDate = getFormattedDate(date, {
+    weekLen: "long",
+    monthLen: "long",
+    day: "numeric",
+    year: true,
+  });
 
-const ExpenseAggregationBadge = ({ totalSum, transactions }) => {
   return (
     <div className="expense-aggregation-badge-container">
       <div className="expense-aggregation-badge">
         <div className="top-container">
-          <p className="aggregation-date"></p>
+          <p className="aggregation-date">
+            {`${formattedDate.weekStr}, ${formattedDate.dateStr}`}
+          </p>
         </div>
         <div className="bottom-container">
           <div className="left-container">
