@@ -7,13 +7,10 @@ const aggregationByDay = [
     date: "20250827",
     totalSum: 0,
     transactions: 0,
-    expenseIds: [], // ✅ store IDs, not full objects
+    expenseIds: [],
   },
 ];
 
-/**
- * Create or update aggregation for a given date.
- */
 export function setAggregationByDate(date, expenses) {
   if (!isValidDate(date)) {
     throw new Error(`Invalid date key: ${date}`);
@@ -48,16 +45,13 @@ function createEmptyAgg(date, expenseIds = [], totalSum = 0, transactions = 0) {
     date,
     totalSum,
     transactions,
-    expenseIds, // ✅ store IDs here
+    expenseIds,
   };
 
   aggregationByDay.push(newAgg);
   return newAgg;
 }
 
-/**
- * Get aggregation for a date. If missing, create an empty one.
- */
 export function getAggregationByDate(date) {
   if (!isValidDate(date)) {
     throw new Error(`Invalid date key: ${date}`);

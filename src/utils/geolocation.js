@@ -27,8 +27,6 @@ export function getCurrentLocation(options = {}) {
 export async function centerOnUser() {
   try {
     const coords = await getCurrentLocation();
-    console.log("Current location:", coords);
-
     GoogleMapsManager.setCenter(coords.lat, coords.lng);
   } catch (e) {
     console.error("Failed to get location:", e);

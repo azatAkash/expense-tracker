@@ -1,21 +1,22 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import GoogleMapsManager from "../utils/GoogleMapsManager";
 import { centerOnUser } from "../utils/geolocation";
-
-export default function GMAP({ mapId }) {
+export default function GMAP({ mapId, searchResult }) {
   const mapRef = useRef(null);
 
   useEffect(() => {
-    const init = async () => {
-      GoogleMapsManager.init(mapRef.current, {
-        mapId,
-      });
+    if (!mapRef.current) return;
+    if (!window.google?.maps) return;
 
-      centerOnUser();
-    };
+    GoogleMapsManager.init(mapRef.current, { mapId });
+    centerOnUser();
+  }, [mapId]);
 
-    init();
-  }, []);
+  useEffect(() => {
+    if (searchResult) {
+      GoogleMapsManager.setCenter(searchResult.lat, searchResult.lng);
+    }
+  }, [searchResult]);
 
   return (
     <div className="map-container">
