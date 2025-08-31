@@ -1,7 +1,7 @@
 // src/components/AddressText.jsx
 import React, { useEffect, useState } from "react";
-import GoogleMapsManager from "../../utils/GoogleMapsManager";
-import { cleanAddress } from "../../utils/format";
+import GoogleMapsManager from "../../../utils/GoogleMapsManager";
+import { cleanAddress } from "../../../utils/format";
 
 export default function AddressText({ lat, lng }) {
   const [address, setAddress] = useState("");

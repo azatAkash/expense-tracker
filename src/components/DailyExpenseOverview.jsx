@@ -35,7 +35,8 @@ const DailyExpenseOverview = () => {
       <ExpenseAggregationOverview aggregation={aggregation} />
 
       <ExpenseAggregationBadge
-        aggregation={(aggregation.totalSum, aggregation.transactions)}
+        totalSum={aggregation?.totalSum ?? 0}
+        transactions={aggregation?.transactions ?? 0}
       />
 
       {/* List just needs items for the selected day */}
