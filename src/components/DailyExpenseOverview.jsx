@@ -1,13 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
+import ExpenseOverviewHeader from "./ExpenseOverviewHeader";
+import DateSlider from "./DateSlider";
 
 const DailyExpenseOverview = () => {
+  const [date, setDate] = useState(new Date());
+
   return (
     <aside className="daily-expense-overview-container">
-      <header className="header">
-        <h1 className="app-name">Expense Tracker</h1>
-        <p className="app-Subheading">Expense Tracker</p>
-      </header>
-      <div className="right-child"></div>
+      <ExpenseOverviewHeader />
+      <DateSlider date={date} onChange={setDate} />
+      {/* later: you can show totals / expenses list here */}
     </aside>
   );
 };

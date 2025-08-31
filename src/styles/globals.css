@@ -1,6 +1,12 @@
 @import url("./categories.css");
 @import url("./gmap.css");
 @import url("./expenses.css");
+@import url("./date-slider.css");
+
+:root {
+  --overview-size: 25%;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -17,9 +23,4 @@ html {
 
 .expenses-map-container {
   display: flex;
-}
-
-.expenses-map-container .left-child {
-  display: flex;
-  gap: 20px;
 }

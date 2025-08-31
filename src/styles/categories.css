@@ -6,7 +6,7 @@
   z-index: 100;
   padding: 25px 20px;
   bottom: 0;
-  left: 20%;
+  left: max(350px, var(--overview-size));
 }
 
 .categories-heading {
