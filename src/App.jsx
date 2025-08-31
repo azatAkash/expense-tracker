@@ -5,10 +5,9 @@ import DailyExpenseOverview from "./components/DailyExpenseOverview";
 const App = () => {
   return (
     <div className="expenses-map-container">
+      <GMAP mapId={MAP_ID} />
       <DailyExpenseOverview />
       <CategoriesBadge />
-
-      <GMAP mapId={MAP_ID} />
     </div>
   );
 };

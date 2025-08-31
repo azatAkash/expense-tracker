@@ -4,9 +4,11 @@ import { formatCurrencyCents, formatTime } from "../utils/format";
 import { getCategoryByName } from "../models/categories";
 import AddressText from "./AddressText";
 import { hexToRgba } from "../utils/format";
+import GoogleMapsManager from "../utils/GoogleMapsManager";
+import React, { useEffect, useMemo } from "react";
 
 const ExpensesList = ({ date }) => {
-  const items = getExpencesByDate(date);
+  const items = getExpencesByDate(date); // compute directly
 
   return (
     <div className="expenses-list-container">

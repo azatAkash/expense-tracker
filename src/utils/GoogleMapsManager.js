@@ -1,25 +1,30 @@
 // src/utils/GoogleMapsManager.js
 export default class GoogleMapsManager {
   static map = null;
-  static places = null;
-  static cache = new Map(); // key: "lat,lng" -> info
+  static cache = new Map();
+  static Place = null;
+
+  static async ensurePlaceClass() {
+    if (GoogleMapsManager.Place) return GoogleMapsManager.Place;
+    if (!window.google || !google.maps) {
+      throw new Error("Google Maps script not loaded");
+    }
+    const { Place } = await google.maps.importLibrary("places");
+    GoogleMapsManager.Place = Place;
+    return Place;
+  }
 
   static init(container, options) {
     if (!window.google || !google.maps) {
       throw new Error("Google Maps script not loaded");
     }
-
     if (!GoogleMapsManager.map) {
       GoogleMapsManager.map = new google.maps.Map(container, {
         center: options.center,
-        zoom: options.zoom || 17,
-        tilt: options.tilt || 60,
+        zoom: options.zoom ?? 17,
+        tilt: options.tilt ?? 60,
         mapId: options.mapId,
       });
-      // init Places on the map
-      GoogleMapsManager.places = new google.maps.places.PlacesService(
-        GoogleMapsManager.map
-      );
     }
     return GoogleMapsManager.map;
   }
@@ -28,13 +33,23 @@ export default class GoogleMapsManager {
     if (GoogleMapsManager.map) GoogleMapsManager.map.setCenter({ lat, lng });
   }
 
+  // Reverse geocode: prefer POI if available
   static geocodeLatLng(lat, lng) {
     return new Promise((resolve, reject) => {
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ location: { lat, lng } }, (results, status) => {
         if (status === "OK" && results?.length) {
-          const best = results[0];
-          resolve({ address: best.formatted_address, placeId: best.place_id });
+          const poi = results.find(
+            (r) =>
+              r.types?.includes("point_of_interest") ||
+              r.types?.includes("establishment")
+          );
+          const best = poi || results[0];
+          resolve({
+            address: best.formatted_address,
+            placeId: best.place_id,
+            types: best.types,
+          });
         } else {
           reject(new Error(`Geocoder failed: ${status}`));
         }
@@ -42,64 +57,56 @@ export default class GoogleMapsManager {
     });
   }
 
-  static getPlaceDetails(placeId) {
-    return new Promise((resolve) => {
-      if (!GoogleMapsManager.places) return resolve(null);
-      GoogleMapsManager.places.getDetails(
-        {
-          placeId,
-          fields: [
-            "name",
-            "types",
-            "website",
-            "formatted_phone_number",
-            "business_status",
-          ],
-        },
-        (place, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-            resolve({
-              name: place.name ?? null,
-              types: place.types ?? [],
-              phone: place.formatted_phone_number ?? null,
-              website: place.website ?? null,
-              businessStatus: place.business_status ?? null,
-            });
-          } else {
-            resolve(null);
-          }
-        }
-      );
-    });
+  // Place details (new API)
+  static async getPlaceDetails(placeId) {
+    try {
+      const Place = await GoogleMapsManager.ensurePlaceClass();
+      const place = new Place({ id: placeId });
+      const data = await place.fetchFields({
+        fields: [
+          "id",
+          "displayName",
+          "types",
+          "websiteUri",
+          "nationalPhoneNumber",
+          "businessStatus",
+        ],
+      });
+      return {
+        name: data.displayName?.text ?? null,
+        types: data.types ?? [],
+        phone: data.nationalPhoneNumber ?? null,
+        website: data.websiteUri ?? null,
+        businessStatus: data.businessStatus ?? null,
+      };
+    } catch {
+      return null;
+    }
   }
 
-  static findNearestPlace(lat, lng, radius = 50) {
-    return new Promise((resolve) => {
-      if (!GoogleMapsManager.places) return resolve(null);
-      GoogleMapsManager.places.nearbySearch(
-        { location: { lat, lng }, radius },
-        (results, status) => {
-          if (
-            status === google.maps.places.PlacesServiceStatus.OK &&
-            results?.length
-          ) {
-            const p = results[0];
-            resolve({
-              name: p.name ?? null,
-              placeId: p.place_id ?? null,
-              types: p.types ?? [],
-            });
-          } else {
-            resolve(null);
-          }
-        }
-      );
-    });
+  static async findNearestPlace(lat, lng, radius = 250) {
+    try {
+      const Place = await GoogleMapsManager.ensurePlaceClass();
+      const resp = await Place.searchNearby({
+        locationRestriction: { center: { lat, lng }, radiusMeters: radius },
+        fields: ["id", "displayName", "types", "shortFormattedAddress"],
+        maxResultCount: 5,
+        rankPreference: "DISTANCE", // <- key to prefer closest
+      });
+      const item =
+        resp?.places?.find((p) => p.displayName?.text) || resp?.places?.[0];
+      if (!item) return null;
+      return {
+        name: item.displayName?.text ?? null,
+        placeId: item.id ?? null,
+        types: item.types ?? [],
+        shortAddress: item.shortFormattedAddress ?? null,
+      };
+    } catch {
+      return null;
+    }
   }
 
-  /**
-   * Main helper: returns { address, name?, placeId?, types?, phone?, website?, businessStatus? }
-   */
   static async getAddressAndPlace(lat, lng) {
     const key = `${lat},${lng}`;
     if (GoogleMapsManager.cache.has(key))
@@ -107,34 +114,32 @@ export default class GoogleMapsManager {
 
     try {
       const g = await GoogleMapsManager.geocodeLatLng(lat, lng);
+
+      // try details for the geocoded placeId
       let details = null;
       if (g.placeId) {
         details = await GoogleMapsManager.getPlaceDetails(g.placeId);
       }
-      if (!details) {
-        const near = await GoogleMapsManager.findNearestPlace(lat, lng, 50);
-        const out = {
-          address: g.address ?? null,
-          name: near?.name ?? null,
-          placeId: near?.placeId ?? null,
-          types: near?.types ?? [],
-        };
-        GoogleMapsManager.cache.set(key, out);
-        return out;
+
+      // FORCE nearby search if (a) we got a plus-code address OR (b) no name yet
+      if (g.isPlusCode || !details?.name) {
+        const near = await GoogleMapsManager.findNearestPlace(lat, lng, 250);
+        if (near) {
+          details = { ...details, ...near };
+        }
       }
+
       const out = {
-        address: g.address ?? null,
+        address: g.address ?? details?.shortAddress ?? null,
         name: details?.name ?? null,
-        placeId: g.placeId ?? null,
+        placeId: g.placeId ?? details?.placeId ?? null,
         types: details?.types ?? [],
-        phone: details?.phone ?? null,
-        website: details?.website ?? null,
-        businessStatus: details?.businessStatus ?? null,
       };
+
       GoogleMapsManager.cache.set(key, out);
       return out;
     } catch (e) {
-      const out = { address: null, error: e?.message ?? String(e) };
+      const out = { address: null, name: null, error: e?.message ?? String(e) };
       GoogleMapsManager.cache.set(key, out);
       return out;
     }

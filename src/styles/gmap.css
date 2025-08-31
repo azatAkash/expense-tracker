@@ -3,7 +3,7 @@
   width: 75%;
   left: max(350px, var(--overview-size));
   position: absolute;
-  transition: all 0.25;
+  transition: all 25;
 }
 
 #map.full {

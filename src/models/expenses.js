@@ -54,6 +54,19 @@ export const expenses = [
       lng: 71.396904,
     },
   },
+  {
+    id: generateId("exp"),
+    date: "20250831",
+    time: "0001",
+    timezone: "5",
+    amountUSDCents: 1875,
+    category: "Entertainment",
+    note: "bought water 1l and milk 1l",
+    coordinates: {
+      lat: 51.091075,
+      lng: 71.400226,
+    },
+  },
 ];
 
 export function getExpencesByDate(date) {
