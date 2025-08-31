@@ -7,6 +7,11 @@
   padding: 25px 20px;
   bottom: 0;
   left: max(350px, var(--overview-size));
+  transition: all 0.25;
+}
+
+.categories-badge.max-left {
+  left: 0;
 }
 
 .categories-heading {

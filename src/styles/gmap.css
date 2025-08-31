@@ -1,6 +1,12 @@
 #map {
   height: 100vh;
-  width: 80%;
+  width: 75%;
   left: max(350px, var(--overview-size));
   position: absolute;
+  transition: all 0.25;
+}
+
+#map.full {
+  width: 100%;
+  left: 0;
 }

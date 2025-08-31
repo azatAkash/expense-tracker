@@ -30,11 +30,6 @@ export async function centerOnUser() {
     console.log("Current location:", coords);
 
     GoogleMapsManager.setCenter(coords.lat, coords.lng);
-    GoogleMapsManager.addCustomPin({
-      lat: coords.lat,
-      lng: coords.lng,
-      label: "You are here",
-    });
   } catch (e) {
     console.error("Failed to get location:", e);
   }

@@ -3,19 +3,27 @@
   height: 100vh;
   position: relative;
   z-index: 100;
-  padding: 30px 25px;
+  padding-top: 30px;
   gap: 20px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+
   flex-direction: column;
   min-width: 350px;
   background-color: white;
+
+  transition: all 0.25;
+}
+.daily-expense-overview-container.closed {
+  display: none;
+  width: 0;
 }
 
 .header {
   display: flex;
   width: 100%;
   align-items: center;
+  padding: 0 25px;
 }
 
 .left-child {
@@ -39,8 +47,20 @@
   align-items: center;
   justify-content: center;
   border-radius: 20%;
+  cursor: pointer;
 }
 
+.close-logo-container {
+  cursor: pointer;
+  transition: all 0.3s;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+}
+.close-logo-container:hover {
+  background-color: rgb(243, 243, 243);
+  border-radius: 50%;
+}
 .app-logo {
   height: 30px;
 }

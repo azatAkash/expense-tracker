@@ -2,9 +2,11 @@
 @import url("./gmap.css");
 @import url("./expenses.css");
 @import url("./date-slider.css");
+@import url("./expenses-list.css");
 
 :root {
   --overview-size: 25%;
+  --border-color: rgba(0, 0, 0, 0.171);
 }
 
 * {

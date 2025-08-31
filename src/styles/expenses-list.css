@@ -1,0 +1,118 @@
+.expenses-list-container {
+  flex: 1;
+  width: 100%;
+  position: relative;
+  background-color: rgba(234, 234, 234, 0.166);
+  overflow-y: scroll;
+}
+
+.line {
+  background-color: var(--border-color);
+  height: 1px;
+  display: inline-block;
+  position: absolute;
+  width: 100%;
+}
+
+.expenses-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.expense {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 90%;
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  gap: 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.expense:hover {
+  box-shadow: 0 1px 2px var(--border-color);
+}
+
+.expense.selected {
+  background: #ebf3ff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px #bfdbfe;
+}
+
+.expense .top {
+  display: flex;
+  justify-content: space-between;
+}
+
+.expense .left-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.top-left-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.expense-time-amount-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.expense-amount {
+  font-size: 1.3rem;
+}
+
+.expense-time-container {
+  display: flex;
+  gap: 5px;
+}
+
+.expense-time-img,
+.expense-place-img {
+  height: 1em;
+}
+
+.expense-time-p {
+  color: rgb(53, 53, 53);
+}
+
+.expense-category {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: scroll;
+}
+.expense-place-container {
+  display: flex;
+  flex-wrap: wrap;
+  max-height: 2.3rem;
+  gap: 5px;
+}
+.expense-note {
+  max-height: 2.3rem;
+  overflow-y: scroll;
+}
+
+.address-skeleton,
+.address-info {
+  color: #656565;
+  font-size: 0.9rem;
+  overflow-x: scroll;
+}

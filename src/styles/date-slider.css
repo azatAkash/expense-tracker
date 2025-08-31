@@ -12,8 +12,9 @@
   background: var(--muted);
   border-radius: 16px;
   padding: 14px;
-  width: 100%;
+  width: 90%;
   margin: 1rem auto;
+  margin: 0 25px;
 }
 
 .nav-btn {
