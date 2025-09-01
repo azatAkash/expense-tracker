@@ -1,98 +1,125 @@
 // src/components/AddExpenseModal.jsx
-import React, { useState } from "react";
-import { addExpense } from "../../models/expenses";
-import { generateId } from "../../utils/generate";
+import React from "react";
 import { categories } from "../../models/categories";
-import { formatToYYYYMMDD, formatTime } from "../../utils/format";
+import { useAddExpenseForm } from "../../hooks/useAddExpenseForm";
+import LocationField from "./LocationField";
 
-export default function AddExpenseModal({ date, onClose }) {
-  const [form, setForm] = useState({
-    date: formatToYYYYMMDD(date),
-    timezone: "5",
-    amountUSDCents: "",
-    category: categories[0].name,
-    note: "",
-    lat: "",
-    lng: "",
-  });
+export default function AddExpenseModal({ date, onClose, onSaved }) {
+  const {
+    form,
+    setForm,
+    errors,
+    isValid,
+    submitting,
+    amountRef,
+    handleChange,
+    handleSubmit,
+    disableCurrentLocation,
+  } = useAddExpenseForm({ date, onClose, onSaved });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const newExpense = {
-      id: generateId("exp"),
-      date: form.date,
-      time: formatTime(), // 👈 always system time at save
-      timezone: form.timezone,
-      amountUSDCents: Number(form.amountUSDCents),
-      category: form.category,
-      note: form.note,
-      coordinates: {
-        lat: parseFloat(form.lat),
-        lng: parseFloat(form.lng),
-      },
-    };
-
-    try {
-      addExpense(newExpense);
-      onClose(); // close modal after save
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+  const locationInvalid = Boolean(errors.lat || errors.lng);
 
   return (
-    <div className="modal-overlay">
+    <div
+      className="modal-overlay"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="modal">
         <h2>Add Expense</h2>
+
         <form onSubmit={handleSubmit} className="expense-form">
-          <input
-            type="number"
-            name="amountUSDCents"
-            placeholder="Amount in cents"
-            value={form.amountUSDCents}
-            onChange={handleChange}
+          <LocationField
+            name={form.placeName}
+            lat={
+              Number.isFinite(Number(form.lat)) ? Number(form.lat) : undefined
+            }
+            lng={
+              Number.isFinite(Number(form.lng)) ? Number(form.lng) : undefined
+            }
             required
+            onNameChange={(v) => setForm((p) => ({ ...p, placeName: v }))}
+            onSelectPlace={(sel) => {
+              const to6 = (v) =>
+                Number.isFinite(v) ? String(Number(v).toFixed(6)) : undefined;
+              setForm((p) => ({
+                ...p,
+                placeName: sel.name || p.placeName,
+                lat: to6(sel.lat) ?? p.lat,
+                lng: to6(sel.lng) ?? p.lng,
+              }));
+              disableCurrentLocation(); // turn toggle OFF when user picks a place
+            }}
           />
 
-          {/* 👇 category dropdown */}
-          <select
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            required
-          >
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.name}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          <label className="lbl">
+            Amount (USD)
+            <input
+              ref={amountRef}
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              name="amountUSD"
+              placeholder="e.g. 18.75"
+              value={form.amountUSD}
+              onChange={handleChange}
+              className={errors.amountUSD ? "invalid" : ""}
+              required
+            />
+            {errors.amountUSD && (
+              <span className="err">{errors.amountUSD}</span>
+            )}
+          </label>
 
-          <textarea
-            name="note"
-            placeholder="Note"
-            value={form.note}
-            onChange={handleChange}
-          />
-          <input
-            type="text"
-            name="lat"
-            placeholder="Latitude"
-            value={form.lat}
-            onChange={handleChange}
-            required
-          />
+          {/* Category */}
+          <label className="lbl">
+            Category
+            <select
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              className={errors.category ? "invalid" : ""}
+              required
+            >
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </label>
 
-          <button type="submit">Save</button>
-          <button type="button" onClick={onClose}>
-            Cancel
-          </button>
+          {/* Note */}
+          <label className="lbl">
+            Note
+            <textarea
+              name="note"
+              placeholder="Optional note"
+              value={form.note}
+              onChange={handleChange}
+              rows={3}
+            />
+          </label>
+
+          {locationInvalid && (
+            <div className="err" style={{ marginTop: 6 }}>
+              Pick a place or turn on “Use my location”.
+            </div>
+          )}
+
+          <div className="row">
+            <div className="spacer" />
+            <button type="button" className="btn ghost" onClick={onClose}>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn primary"
+              disabled={!isValid || submitting}
+            >
+              {submitting ? "Saving…" : "Save"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

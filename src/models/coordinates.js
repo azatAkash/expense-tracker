@@ -1,31 +1,28 @@
+// src/models/coordinates.js
 import { generateId } from "../utils/generate";
+import { load, save } from "../utils/persist";
 
-export const coordinates = [
-  {
-    id: generateId("cor"),
-    coordinates: {
-      lat: 51.1605,
-      lng: 71.4704,
-    },
-    info: {
-      street: "",
-      home: "",
-      city: "",
-      country: "",
-      name: "",
-    },
-  },
-];
+const STORAGE_NAME = "coordinates";
+
+export const coordinates = [];
+(() => {
+  const persisted = load(STORAGE_NAME, null);
+  if (Array.isArray(persisted)) coordinates.push(...persisted);
+})();
+
+function normalizeCoord(v) {
+  return Number(v);
+}
 
 export function normalizeCoordinates({ lat, lng }, decimals = 5) {
   return {
-    lat: normalizeCoord(lat.toFixed(decimals)),
-    lng: normalizeCoord(lng.toFixed(decimals)),
+    lat: normalizeCoord(Number(lat).toFixed(decimals)),
+    lng: normalizeCoord(Number(lng).toFixed(decimals)),
   };
 }
+
 export function findLocation(lat, lng, decimals = 5) {
   const target = normalizeCoordinates({ lat, lng }, decimals);
-
   return coordinates.find((c) => {
     const norm = normalizeCoordinates(c.coordinates, decimals);
     return norm.lat === target.lat && norm.lng === target.lng;
@@ -34,8 +31,6 @@ export function findLocation(lat, lng, decimals = 5) {
 
 export function addCoordinates({ lat, lng, info = {} }, decimals = 5) {
   const norm = normalizeCoordinates({ lat, lng }, decimals);
-
-  // check if already exists
   const existing = findLocation(norm.lat, norm.lng, decimals);
   if (existing) return existing;
 
@@ -50,19 +45,36 @@ export function addCoordinates({ lat, lng, info = {} }, decimals = 5) {
       name: info.name || "",
     },
   };
-
   coordinates.push(newCoord);
+  save(STORAGE_NAME, coordinates);
+  console.log(coordinates);
   return newCoord;
 }
 
 export function updateCoordinates(id, newInfo = {}) {
   const entry = coordinates.find((c) => c.id === id);
   if (!entry) return null;
-
-  entry.info = {
-    ...entry.info,
-    ...newInfo,
-  };
-
+  entry.info = { ...entry.info, ...newInfo };
+  save(STORAGE_NAME, coordinates);
   return entry;
+}
+
+export function upsertCoordinates({ lat, lng, info = {} }, decimals = 5) {
+  const existing = findLocation(lat, lng, decimals);
+  if (existing) {
+    existing.info = { ...existing.info, ...info };
+    save(STORAGE_NAME, coordinates);
+    return existing;
+  }
+  return addCoordinates({ lat, lng, info }, decimals);
+}
+
+export function rememberPlace(
+  { lat, lng, name, street = "", city = "", country = "", home = "" },
+  decimals = 5
+) {
+  return upsertCoordinates(
+    { lat, lng, info: { name: name || "", street, city, country, home } },
+    decimals
+  );
 }

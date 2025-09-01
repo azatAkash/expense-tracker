@@ -6,7 +6,7 @@ import TopLeft from "./expenses-list/TopLeft";
 import Category from "./expenses-list/Category";
 import AddExpenses from "./AddExpenses";
 
-const ExpensesList = ({ date, items }) => {
+const ExpensesList = ({ date, items, onSaved }) => {
   const hasItems = items && items.length > 0;
 
   return (
@@ -48,7 +48,7 @@ const ExpensesList = ({ date, items }) => {
           <p className="no-expenses">...No expenses for today...</p>
         )}
       </div>
-      <AddExpenses date={date} />
+      <AddExpenses date={date} onSaved={onSaved} />
     </div>
   );
 };

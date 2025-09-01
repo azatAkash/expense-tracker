@@ -2,16 +2,21 @@ export function formatCurrencyCents(priceCents) {
   return (Math.round(priceCents) / 100).toFixed(2);
 }
 
-export function formatTime(timeStr, use12h = false) {
-  if (!timeStr) return "";
+export function formatTime(timeStr, use12h = false, locale = "en-US") {
+  if (!timeStr || typeof timeStr !== "string") return "";
 
-  const hours = parseInt(timeStr.slice(0, 2), 10);
-  const minutes = parseInt(timeStr.slice(2, 4), 10);
+  // Normalize: pad left so "930" → "0930"
+  const normalized = timeStr.padStart(4, "0");
+
+  const hours = parseInt(normalized.slice(0, 2), 10);
+  const minutes = parseInt(normalized.slice(2, 4), 10);
+
+  if (isNaN(hours) || isNaN(minutes)) return "";
 
   const d = new Date();
-  d.setHours(hours, minutes);
+  d.setHours(hours, minutes, 0, 0); // clear seconds/millis
 
-  return d.toLocaleTimeString("en-US", {
+  return d.toLocaleTimeString(locale, {
     hour: "numeric",
     minute: "2-digit",
     hour12: use12h,
@@ -25,7 +30,12 @@ export function formatToYYYYMMDD(date = new Date()) {
   return `${year}${month}${day}`;
 }
 
-// utils/format.js
+export function getCurrentTimeStr(date = new Date()) {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}${minutes}`; // e.g. "1203"
+}
+
 export function getFormattedDate(
   date = new Date(),
   {

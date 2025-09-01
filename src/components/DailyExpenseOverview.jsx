@@ -7,25 +7,28 @@ import { formatToYYYYMMDD } from "../utils/format";
 import { getExpencesByDate } from "../models/expenses";
 import { setAggregationByDate } from "../models/aggregation";
 import ExpenseAggregationBadge from "./overview/ExpenseAggregationBadge";
+import Markers from "./Markers";
 
 const DailyExpenseOverview = () => {
   const [date, setDate] = useState(new Date());
   const [open, setOpen] = useState(true);
+  const [version, setVersion] = useState(0); // 👈 add
 
-  // compute items when `date` changes
   const items = useMemo(
     () => getExpencesByDate(formatToYYYYMMDD(date)),
-    [date]
+    [date, version] // 👈 depend on version too
   );
   const aggregation = useMemo(
     () => setAggregationByDate(formatToYYYYMMDD(date), items),
-    [date]
+    [date, items] // depend on items
   );
+  const handleSaved = () => setVersion((v) => v + 1); // 👈 bump to refresh
 
   return (
     <aside
       className={`daily-expense-overview-container ${open ? "" : "closed"}`}
     >
+      <Markers items={items} />
       <ExpenseOverviewHeader onClose={() => setOpen(false)} />
 
       {/* Date slider should call setDate(dateObj) */}
@@ -41,7 +44,7 @@ const DailyExpenseOverview = () => {
       />
 
       {/* List just needs items for the selected day */}
-      <ExpensesList date={date} items={items} />
+      <ExpensesList date={date} items={items} onSaved={handleSaved} />
     </aside>
   );
 };

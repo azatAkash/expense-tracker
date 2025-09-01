@@ -2,6 +2,7 @@
 import React from "react";
 import { formatCurrencyCents } from "../../utils/format";
 import { getFormattedDate } from "../../utils/format";
+
 const ExpenseAggregationBadge = ({ totalSum, transactions, date }) => {
   const formattedDate = getFormattedDate(date, {
     weekLen: "long",

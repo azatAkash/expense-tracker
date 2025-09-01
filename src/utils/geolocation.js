@@ -9,8 +9,8 @@ export function getCurrentLocation(options = {}) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         resolve({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
+          lat: Number(pos.coords.latitude.toFixed(6)),
+          lng: Number(pos.coords.longitude.toFixed(6)),
         });
       },
       (err) => reject(err),
@@ -28,6 +28,15 @@ export async function centerOnUser() {
   try {
     const coords = await getCurrentLocation();
     GoogleMapsManager.setCenter(coords.lat, coords.lng);
+  } catch (e) {
+    console.error("Failed to get location:", e);
+  }
+}
+
+export async function useMyLocation() {
+  try {
+    const { lat, lng } = await getCurrentLocation();
+    setForm((p) => ({ ...p, lat: String(lat), lng: String(lng) }));
   } catch (e) {
     console.error("Failed to get location:", e);
   }
