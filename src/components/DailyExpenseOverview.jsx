@@ -41,7 +41,7 @@ const DailyExpenseOverview = () => {
       />
 
       {/* List just needs items for the selected day */}
-      <ExpensesList items={items} />
+      <ExpensesList date={date} items={items} />
     </aside>
   );
 };

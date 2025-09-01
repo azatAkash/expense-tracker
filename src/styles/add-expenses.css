@@ -1,0 +1,37 @@
+.add-expenses-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.add-expenses {
+  text-align: center;
+  width: 80%;
+  padding: 10px 20px;
+  gap: 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 20px;
+  background: linear-gradient(
+    270deg,
+    /* fixed direction */ rgba(255, 192, 203, 0.114),
+    rgba(69, 227, 255, 0.156),
+    rgba(67, 255, 158, 0.151)
+  );
+
+  background-size: 200% 200%; /* make it larger to move around */
+  background-position: left center;
+  transition: background-position 2s ease;
+
+  border: 1px solid rgba(69, 227, 255, 0.34);
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.add-expenses:hover {
+  background-position: right center; /* this animates smoothly */
+  box-shadow: 2px 2px 2px rgba(69, 227, 255, 0.55);
+  color: rgb(0, 63, 117);
+}

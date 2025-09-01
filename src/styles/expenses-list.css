@@ -2,16 +2,14 @@
   flex: 1;
   width: 100%;
   position: relative;
+
   background-color: rgba(234, 234, 234, 0.166);
   overflow-y: scroll;
 }
 
-.line {
-  background-color: var(--border-color);
-  height: 1px;
-  display: inline-block;
-  position: absolute;
-  width: 100%;
+.no-expenses {
+  font-weight: 400;
+  color: #979797;
 }
 
 .expenses-list {
@@ -19,8 +17,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: relative;
   gap: 10px;
-  margin: 20px 0;
+  padding: 20px 0;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
 }
 
 .expense {

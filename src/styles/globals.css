@@ -5,6 +5,8 @@
 @import url("./expenses-list.css");
 @import url("./aggregation.css");
 @import url("./aggregation-badge.css");
+@import url("./add-expenses.css");
+@import url("./add-expense-modal.css");
 :root {
   --overview-size: 25%;
   --border-color: rgba(0, 0, 0, 0.171);

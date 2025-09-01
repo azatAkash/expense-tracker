@@ -78,3 +78,44 @@ export function getExpencesByDate(date) {
     .filter((exp) => exp.date === date)
     .sort((a, b) => Number(a.time) - Number(b.time));
 }
+
+export function addExpense(expense) {
+  // destructure with defaults
+  const {
+    date,
+    time,
+    timezone = "0",
+    amountUSDCents,
+    category,
+    note = "",
+    coordinates,
+  } = expense;
+
+  // basic validation
+  if (!isValidDate(date)) {
+    throw new Error(`Invalid date: ${date}`);
+  }
+  if (!time || isNaN(Number(time))) {
+    throw new Error(`Invalid time: ${time}`);
+  }
+  if (!Number.isFinite(amountUSDCents) || amountUSDCents < 0) {
+    throw new Error(`Invalid amount: ${amountUSDCents}`);
+  }
+  if (!coordinates?.lat || !coordinates?.lng) {
+    throw new Error("Missing coordinates");
+  }
+
+  const newExpense = {
+    id: generateId("exp"),
+    date,
+    time,
+    timezone,
+    amountUSDCents,
+    category,
+    note,
+    coordinates,
+  };
+
+  expenses.push(newExpense);
+  return newExpense;
+}
