@@ -37,14 +37,16 @@
   transition: all 0.2s;
 }
 
-.expense:hover {
-  box-shadow: 2px 2px 2px var(--border-color);
+.expense.selected {
+  outline: 1px solid #d6e8ff;
+  border: 1px solid rgba(26, 115, 232, 0.502);
+
+  background-color: rgba(26, 115, 232, 0.08);
+  box-shadow: 0 3px 5px var(--border-color);
 }
 
-.expense.selected {
-  background: #ebf3ff;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px #bfdbfe;
+.expense:hover {
+  box-shadow: 0 3px 5px var(--border-color);
 }
 
 .expense .top {

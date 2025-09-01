@@ -1,12 +1,13 @@
-// src/components/ExpensesList.jsx
-
+// src/components/overview/ExpensesList.jsx
+import { useEffect } from "react";
 import { getCategoryByName } from "../../models/categories";
 import AddressText from "./expenses-list/AddressText";
 import TopLeft from "./expenses-list/TopLeft";
 import Category from "./expenses-list/Category";
 import AddExpenses from "./AddExpenses";
+import GoogleMapsManager from "../../utils/GoogleMapsManager";
 
-const ExpensesList = ({ date, items, onSaved }) => {
+const ExpensesList = ({ date, items, onSaved, selectedId, onSelect }) => {
   const hasItems = items && items.length > 0;
 
   return (
@@ -15,9 +16,24 @@ const ExpensesList = ({ date, items, onSaved }) => {
         {hasItems ? (
           items.map((expense) => {
             const category = getCategoryByName(expense.category);
+            const isSelected = selectedId === expense.id;
 
             return (
-              <div className="expense" key={expense.id}>
+              <div
+                className={`expense ${isSelected ? "selected" : ""}`}
+                key={expense.id}
+                onClick={() => {
+                  (onSelect?.(expense.id),
+                    GoogleMapsManager.setCenter(
+                      expense.coordinates.lat,
+                      expense.coordinates.lng
+                    ));
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === "Enter" && onSelect?.(expense.id)}
+              >
+                {/* existing content unchanged */}
                 <div className="top">
                   <div className="left-container">
                     <TopLeft

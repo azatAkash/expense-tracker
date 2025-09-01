@@ -2,14 +2,16 @@
 const GoogleMapsManager = {
   map: null,
   _placeCache: new Map(),
-  _markers: new Set(), // keep references so we can clear/remove
+  _markers: new Set(),
 
-  // in GoogleMapsManager
+  // map readiness + active info window state
   _readyPromise: null,
   _readyResolve: null,
   _activeInfoWindow: null,
+  _activeOnClose: null,
   _infoCssInjected: false,
 
+  // ----- lifecycle -----
   waitForMap() {
     if (this.map) return Promise.resolve(this.map);
     if (!this._readyPromise) {
@@ -28,7 +30,7 @@ const GoogleMapsManager = {
         mapId,
       } = opts;
       this.map = new google.maps.Map(container, { center, zoom, mapId, tilt });
-      this._readyResolve?.(this.map); // 👈 resolve “ready”
+      this._readyResolve?.(this.map);
     }
     return this.map;
   },
@@ -37,7 +39,66 @@ const GoogleMapsManager = {
     this.map?.setCenter({ lat, lng });
   },
 
-  // ---------- helpers ----------
+  // in src/utils/GoogleMapsManager.js
+  // src/utils/GoogleMapsManager.js
+  async addUserMarker(
+    lat,
+    lng,
+    { text = "Your location", showLabel = true } = {}
+  ) {
+    if (!this.map) throw new Error("Map is not initialized");
+    const { AdvancedMarkerElement } = await this._ensureMarkerLib();
+
+    // wrapper holds dot + label stacked vertically
+    const wrap = document.createElement("div");
+    Object.assign(wrap.style, {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      pointerEvents: "auto",
+    });
+
+    // blue dot
+    const dot = document.createElement("div");
+    Object.assign(dot.style, {
+      width: "40px",
+      height: "40px",
+      borderRadius: "50%",
+      background: "#1a73e8",
+      boxShadow:
+        "0 0 0 3px #fff, 0 0 0 6px rgba(26,115,232,.35), 0 8px 18px rgba(0,0,0,.25)",
+    });
+    wrap.appendChild(dot);
+
+    // pill label
+    if (showLabel) {
+      const label = document.createElement("div");
+      label.textContent = text;
+      Object.assign(label.style, {
+        marginTop: "6px",
+        background: "#fff",
+        color: "#1a73e8",
+        fontSize: "12px",
+        fontWeight: "600",
+        padding: "4px 8px",
+        borderRadius: "999px",
+        boxShadow: "0 2px 6px rgba(0,0,0,.15)",
+        whiteSpace: "nowrap",
+      });
+      wrap.appendChild(label);
+    }
+
+    const marker = new AdvancedMarkerElement({
+      map: this.map,
+      position: { lat, lng },
+      content: wrap,
+      zIndex: 10000,
+    });
+
+    this._markers.add(marker);
+    return marker;
+  },
+
   async _ensurePlacesLib() {
     if (!window.google?.maps) throw new Error("Google Maps script not loaded");
     const { Place } = await google.maps.importLibrary("places");
@@ -51,6 +112,7 @@ const GoogleMapsManager = {
     return { AdvancedMarkerElement, PinElement };
   },
 
+  // ----- helpers -----
   _normalizeDisplayName(val) {
     if (!val) return null;
     if (typeof val === "string") return val;
@@ -66,29 +128,55 @@ const GoogleMapsManager = {
     return { lat, lng };
   },
 
-  // ---------- custom marker factory ----------
-  /**
-   * Create a circular money marker like in the screenshot.
-   * Returns the AdvancedMarkerElement instance.
-   */
+  _escape(s) {
+    return String(s).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c]
+    );
+  },
+
+  _formatUSD(cents) {
+    if (!Number.isFinite(cents)) return "$0.00";
+    return `$${(cents / 100).toFixed(2)}`;
+  },
+
+  _formatTimeHHmm(hhmm) {
+    if (!hhmm || String(hhmm).length < 4) return "";
+    const h = Number(String(hhmm).slice(0, 2));
+    const m = Number(String(hhmm).slice(2, 4));
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  },
+
   async addMoneyMarker(lat, lng, opts = {}) {
     if (!this.map) throw new Error("Map is not initialized");
     const {
-      size = 40, // diameter in px
-      label = "$", // glyph text
-      bg = "#e53935", // red center
-      ring = "#ffb300", // yellow ring
-      textColor = "#fff", // glyph color
+      size = 40,
+      label = "$",
+      bg = "#e53935",
+      ring = "#ffb300",
+      textColor = "#fff",
       ringWidth = 5,
       shadow = true,
-      zIndex,
+      zIndex = 17,
       draggable = false,
       onClick,
     } = opts;
 
     const { AdvancedMarkerElement } = await this._ensureMarkerLib();
 
-    // build HTML content
     const el = document.createElement("div");
     el.className = "gm-money-marker";
     Object.assign(el.style, {
@@ -107,7 +195,7 @@ const GoogleMapsManager = {
       fontSize: `${Math.round(size * 0.5)}px`,
       lineHeight: "1",
       boxShadow: shadow ? "0 8px 18px rgba(0,0,0,.35)" : "none",
-      transform: "translateZ(0)", // avoid blurriness
+      transform: "translateZ(0)",
     });
     el.textContent = label;
 
@@ -120,7 +208,6 @@ const GoogleMapsManager = {
       draggable,
     });
 
-    // housekeeping
     this._markers.add(marker);
     marker.addListener("map_changed", () => {
       if (!marker.map) this._markers.delete(marker);
@@ -132,13 +219,13 @@ const GoogleMapsManager = {
 
   setMarkerPosition(marker, lat, lng) {
     if (!marker) return;
-    marker.position = { lat, lng }; // AdvancedMarkerElement setter
+    marker.position = { lat, lng };
   },
 
   removeMarker(marker) {
     if (!marker) return;
     try {
-      marker.map = null; // detach
+      marker.map = null;
       this._markers.delete(marker);
     } catch {}
   },
@@ -152,7 +239,7 @@ const GoogleMapsManager = {
     this._markers.clear();
   },
 
-  // ---------- (your existing place search code below) ----------
+  // ----- places search (new Places API) -----
   _buildTextSearchRequest(
     textQuery,
     lat,
@@ -233,62 +320,96 @@ const GoogleMapsManager = {
     return results;
   },
 
-  _closeActiveInfo() {
-    try {
-      this._activeInfoWindow?.close();
-    } catch {}
-    this._activeInfoWindow = null;
-  },
-
-  // inject once; tweak sizes/colors as you like
+  // ----- styled info window -----
   _injectInfoCss() {
     if (this._infoCssInjected) return;
     const css = `
-  .exp-iw { width: 360px; border-radius: 16px; overflow: hidden; }
-  .exp-iw__head { background:#1a73e8; color:#fff; padding:12px 16px; }
-  .exp-iw__row { display:flex; align-items:center; justify-content:space-between; }
-  .exp-iw__amount { font-weight:800; font-size:22px; letter-spacing:.2px; }
-  .exp-iw__close { width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.2);
-                   display:flex; align-items:center; justify-content:center; cursor:pointer; }
-  .exp-iw__meta { margin-top:6px; opacity:.92; font-weight:600; font-size:13px; }
-  .exp-iw__body { background:#fff; color:#222; padding:14px 16px; }
-  .exp-iw__title { font-size:18px; font-weight:700; margin-bottom:8px; }
-  .exp-iw__place { display:flex; align-items:center; gap:8px; color:#5f6368; font-size:14px; }
-  .exp-iw__dot { width:8px; height:8px; border-radius:50%; background:#5f6368; }
-  `;
+      .exp-iw { width: 360px; border-radius: 16px; overflow: hidden; }
+      .exp-iw__head { background: var(--exp-accent, #1a73e8); color:#fff; padding:12px 16px; }
+      .exp-iw__row { display:flex; align-items:center; justify-content:space-between; }
+      .exp-iw__amount { font-weight:800; font-size:22px; letter-spacing:.2px; }
+      .exp-iw__close { width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.2);
+                       display:flex; align-items:center; justify-content:center; cursor:pointer; }
+      .exp-iw__meta { margin-top:6px; opacity:.92; font-weight:600; font-size:13px; }
+      .exp-iw__body { background:#fff; color:#222; padding:14px 16px; }
+      .exp-iw__title { font-size:18px; font-weight:700; margin-bottom:8px; }
+      .exp-iw__place { display:flex; align-items:center; gap:8px; color:#5f6368; font-size:14px; }
+      .exp-iw__dot { width:8px; height:8px; border-radius:50%; background:#5f6368; }
+    `;
     const style = document.createElement("style");
     style.textContent = css;
     document.head.appendChild(style);
     this._infoCssInjected = true;
   },
 
-  _formatUSD(cents) {
-    if (!Number.isFinite(cents)) return "$0.00";
-    return `$${(cents / 100).toFixed(2)}`;
+  /**
+   * Close any open InfoWindow.
+   * @param {boolean} silent - if true, do NOT call external onClose
+   */
+  _closeActiveInfo(silent = false) {
+    try {
+      this._activeInfoWindow?.close();
+    } catch {}
+    if (!silent && this._activeOnClose) {
+      try {
+        this._activeOnClose();
+      } catch {}
+    }
+    this._activeOnClose = null;
+    this._activeInfoWindow = null;
   },
 
-  _formatTimeHHmm(hhmm) {
-    // "0915" -> "09:15" (24h). Adjust to your formatter if needed.
-    if (!hhmm || String(hhmm).length < 4) return "";
-    const h = Number(String(hhmm).slice(0, 2));
-    const m = Number(String(hhmm).slice(2, 4));
-    const d = new Date();
-    d.setHours(h, m, 0, 0);
-    return d.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
+  _showInfoWindowAt(marker, content, onClose) {
+    const iw = new google.maps.InfoWindow({
+      content,
+      disableAutoPan: true, // ← keep current tilt/heading/zoom
+    });
+
+    iw.open({ map: this.map, anchor: marker, shouldFocus: false });
+
+    iw.addListener("domready", () => {
+      const root = this.map.getDiv();
+      const closeBtn = root.querySelector(".gm-ui-hover-effect");
+      if (closeBtn) closeBtn.style.display = "none";
+      const pads = root.querySelectorAll(
+        ".gm-style-iw, .gm-style-iw-d, .gm-style-iw-ch"
+      );
+      pads.forEach((el) => {
+        el.style.padding = "0";
+        el.style.overflow = "visible";
+        el.style.borderRadius = "16px";
+      });
+      if (content) {
+        content.style.margin = "0";
+        content.style.display = "block";
+        content.style.width = "360px";
+      }
+    });
+
+    iw.addListener("closeclick", () => {
+      onClose?.();
+      this._activeOnClose = null;
+      this._activeInfoWindow = null;
+    });
+
+    this._activeInfoWindow = iw;
+    this._activeOnClose = onClose;
+
+    content.querySelector?.(".exp-iw__close")?.addEventListener("click", () => {
+      onClose?.();
+      this._closeActiveInfo();
     });
   },
-
   /**
-   * Build & open a styled info window anchored to a marker.
-   * expense: { amountUSDCents, category, time, note, placeName }
+   * Open styled info window. Pass an onClose callback in opts if you want to
+   * clear selection in the UI when the user closes the popup.
    */
-  openExpenseInfo(marker, expense = {}) {
+  openExpenseInfo(marker, expense = {}, opts = {}) {
     if (!this.map || !marker) return;
     this._injectInfoCss();
-    this._closeActiveInfo();
+
+    // close any previous popup silently so your selected card isn't cleared
+    this._closeActiveInfo(true);
 
     const {
       amountUSDCents = 0,
@@ -296,55 +417,31 @@ const GoogleMapsManager = {
       time = "",
       note = "",
       placeName = "",
+      accentColor = "#1a73e8",
     } = expense;
+    const { onClose } = opts;
 
     const wrap = document.createElement("div");
     wrap.className = "exp-iw";
     wrap.innerHTML = `
-    <div class="exp-iw__head">
-      <div class="exp-iw__row">
-        <div class="exp-iw__amount">${this._formatUSD(amountUSDCents)}</div>
-        <div class="exp-iw__close" aria-label="Close">✕</div>
+      <div class="exp-iw__head" style="--exp-accent:${accentColor}">
+        <div class="exp-iw__row">
+          <div class="exp-iw__amount">${this._formatUSD(amountUSDCents)}</div>
+          <div class="exp-iw__close" aria-label="Close">✕</div>
+        </div>
+        <div class="exp-iw__meta">${this._escape(category)}${
+          category && time ? " • " : ""
+        }${this._formatTimeHHmm(time)}</div>
       </div>
-      <div class="exp-iw__meta">${category || ""}${category && time ? " • " : ""}${this._formatTimeHHmm(time) || ""}</div>
-    </div>
-    <div class="exp-iw__body">
-      <div class="exp-iw__title">${this._escape(note || "Expense")}</div>
-      <div class="exp-iw__place"><span class="exp-iw__dot"></span>${this._escape(placeName || "Unknown place")}</div>
-    </div>
-  `;
+      <div class="exp-iw__body">
+        <div class="exp-iw__title">${this._escape(note || "Expense")}</div>
+        <div class="exp-iw__place"><span class="exp-iw__dot"></span>${this._escape(
+          placeName || "Unknown place"
+        )}</div>
+      </div>
+    `;
 
-    this._showInfoWindowAt(marker, wrap);
-  },
-
-  // add this small escape util next to other helpers:
-  _escape(s) {
-    return String(s).replace(
-      /[&<>"']/g,
-      (c) =>
-        ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;",
-        })[c]
-    );
-  },
-
-  /* finally, still inside GoogleMapsManager: */
-  _showInfoWindowAt(marker, content) {
-    const iw = new google.maps.InfoWindow({ content });
-    iw.open({ map: this.map, anchor: marker, shouldFocus: false });
-    iw.addListener("domready", () => {
-      const root = this.map.getDiv();
-      // The close button has class 'gm-ui-hover-effect'
-      const closeBtn = root.querySelector(".gm-ui-hover-effect");
-      if (closeBtn) closeBtn.style.display = "none";
-    });
-    this._activeInfoWindow = iw;
-    const btn = content.querySelector?.(".exp-iw__close");
-    btn?.addEventListener("click", () => this._closeActiveInfo());
+    this._showInfoWindowAt(marker, wrap, onClose);
   },
 };
 
