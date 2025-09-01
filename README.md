@@ -58,25 +58,6 @@ To build: `npm run build` and preview with `npm run preview`.
 
 _No server is required for the demo. Swapping `localStorage` for any backend later is straightforward (single storage module)._
 
-```
-src/
-  components/
-    overview/…           // daily list, totals, date slider
-    AddExpenseModal.jsx  // add form + validation
-    Markers.jsx          // map markers bound to expenses
-  hooks/
-    useAddExpenseForm.js
-    useExpenseValidation.js
-  models/
-    expenses.js          // storage adapter (localStorage)
-    categories.js
-    coordinates.js       // place-name memory for coordinates
-  utils/
-    GoogleMapsManager.js // map init, markers, styled info window
-    geolocation.js
-    format.js
-```
-
 ## Notes / trade-offs
 
 - This is a client-side demo; no auth or server persistence.
